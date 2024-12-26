@@ -10,8 +10,9 @@ from googletrans import Translator
 import time
 search = 0
 listes = 0
+steam_start = 0
 
-commands = {"say_hello": ["привет","здравствуй","хай","hi","hello"],
+commands = {"say_hello": ["привет","здравствуй","хай","hi","hello","здравия желаю","здравия тебе","желаю здравия"],
             "name": ["гена","генадий","геннадий","геняша","геша","геночка","ген"],
             "web": ["браузер","хром","гугл","гуглхром","гугл хром","browser","web browser","google","chrome","google chrome"],
             "mostes": ["какие у тебя возможности","что ты умеешь","что ты знаешь"],
@@ -21,7 +22,16 @@ commands = {"say_hello": ["привет","здравствуй","хай","hi","h
             "downloads": ["папку загрузок","загрузки","скачанное","загруженное","папку downloads","downloads","папку скачанное"],
             "say": ["скажи","расскажи","поясни","отвесь"],
             "joke": ["шутку","анекдот","прикол","смешнявку"],
-            "search": ["поищи","найди","загугли","нагугли","погугли","отищи"]}
+            "search": ["поищи","найди","загугли","нагугли","погугли","отищи"],
+            "steam":["steam", "стим"],
+            "start_app": ["запусти игру", "запусти", "start", "запускай игру", "включи игру"]}
+
+steamapps = {"1818450":["stalcraftx", "stalcraft", "сталкрафт", "сталкрафтx"],
+             "387990":["scrap mechanic", "скрап механик", "скраб механик"],
+             "252490":["rust", "раст"],
+             "730":["cs2", "csgo", "conter strike", "кс2","ксго","кс","cs","каэс","контру"],
+             " ":["стим", "steam"]
+             }
 
 
 
@@ -39,29 +49,61 @@ def say(word):
 
 trr = Translator()
 
+def start_steamapp(app):
+    for steamapp in commands["start_app"]:
+        for steams in commands["steam"]:
+            if str(steamapp) + str(steams) in app:
+                say("уже запускаю steam")
+                WB.open_new("steam://rungameid")
+                return(0)
+            else:
+                for steamapp in steamapps:
+                    for appnames in steamapps[steamapp]:
+                        if app in appnames:
+                            say("уже запускаю "+str(app))
+                            WB.open_new("steam://rungameid/"+str(steamapp))
+                            return(0)
+                say("извините, я не знаю эту игру")
+                return(1)
+                        
+
 def get_anekdot():
     joke = pj.get_joke()
-    joke_result = trr.translate(joke, dest='ru')
+    print(joke)
+    joke_result = trr.translate(joke, dest = "ru")
     return(joke_result.text)
 
 
 r = sr.Recognizer()
 
 
-def comm_out(cout, search):
+def comm_out(cout, search, steam_start):
+    
+    for steam in commands["start_app"]:
+        if str(steam) in cout:
+            say("что вам запустить, повелитель?")
+            with sr.Microphone() as src:
+                r.adjust_for_ambient_noise(src, duration=0.25)
+                aud = r.listen(src,phrase_time_limit=5)
+            cout = r.recognize_google(aud, language="ru-RU").lower()
+            steam_start = 1
+            
+    if steam_start == 1:
+        start_steamapp(cout)
+        steam_start = 0
     
     
     
     for s in commands["search"]:
-            for d in commands["web"]:
-                if search == 0:
-                    if ("за"+str(d)+"и") == cout or (str(s)) == cout:
-                        say("что вам найти, повелитель?")
-                        with sr.Microphone() as src:
-                            r.adjust_for_ambient_noise(src, duration=0.25)
-                            aud = r.listen(src,phrase_time_limit=5)
-                        cout = r.recognize_google(aud, language="ru-RU").lower()
-                        search = 1
+        for d in commands["web"]:
+            if search == 0:
+                if ("за"+str(d)+"и") == cout or (str(s)) == cout:
+                    say("что вам найти, повелитель?")
+                    with sr.Microphone() as src:
+                        r.adjust_for_ambient_noise(src, duration=0.25)
+                        aud = r.listen(src,phrase_time_limit=5)
+                    cout = r.recognize_google(aud, language="ru-RU").lower()
+                    search = 1
 
         
 
@@ -158,7 +200,7 @@ while True:
 
         
         if listes == 1:
-            comm_out(cin, search)
+            comm_out(cin, search, steam_start)
 
         listes = 0
 
